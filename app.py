@@ -19,8 +19,8 @@ headers = {
     }
 
 
-def get_data(ticker):
-    requestResponse = requests.get(f"https://api.tiingo.com/tiingo/daily/{ticker}/prices?startDate=2023-12-02&endDate=2024-12-02 ",
+def get_data(ticker, today):
+    requestResponse = requests.get(f"https://api.tiingo.com/tiingo/daily/{ticker}/prices?startDate=2023-12-03&endDate={today} ",
             headers=headers)
     print(f'{ticker}: {requestResponse}')
     data = requestResponse.json()
@@ -46,26 +46,6 @@ def get_performance(df):
     df['six months'] = six_months
     df.to_pickle(f'./data/{df['ticker'][df.index[0]]}.pkl')
     return df
-
-
-# def plot_perf(performance_df, ticker):
-#     date_list = list(performance_df['date'])
-#     formatted_date_list = []
-#     for i in date_list:
-#         date_obj = datetime.strptime(i, "%Y-%m-%dT%H:%M:%S.%fZ")
-#         formatted_date_list.append(date_obj.strftime("%m-%d"))
-#     plt.figure(figsize=(16, 12))
-#     plt.title(ticker)
-#     plt.xlabel('Date')
-#     plt.ylabel('Performance (%)')
-#     plt.xticks(performance_df.index[::10], formatted_date_list[::10], rotation=45)
-#     plt.plot(performance_df['five days'][performance_df.index[4:]], marker='.')
-#     plt.plot(performance_df['one month'][performance_df.index[19:]], marker='.')
-#     plt.plot(performance_df['six months'][performance_df.index[129:]], marker='.')
-#     plt.savefig(f'outputs/{ticker}.png')
-#     plt.show(block=False)
-#     time.sleep(2)
-#     plt.close()
 
 def plot_5d_perf(performance_df_list, perf_type, hist_length, interval=1):
     hist_length = hist_length * -1
@@ -131,15 +111,22 @@ def plot_6m_perf(performance_df_list, perf_type, hist_length, interval=1):
     plt.show()
 
 
+today = datetime.today()
+formatted_today = today.strftime('%Y-%m-%d')
+
 sector_tickers = ['XLV', 'XLC', 'XLY', 'XLP', 'XLE', 'XLF', 'XLI', 'XLU', 'XLK', 'SMH', 'QQQ', 'SPY']
 sect_perf_data_list = []
 for ticker in sector_tickers:
     try:
         performance_data = pd.read_pickle(f'./data/{ticker}.pkl')
         print('File Found')
+        if performance_data['date'][performance_data.index[-1]] < formatted_today:
+            print('File Outdated')
+            data = get_data(ticker, formatted_today)
+            performance_data = get_performance(data)
     except FileNotFoundError:
-        print('File Not Found Error')
-        data = get_data(ticker)
+        print('File Not Found')
+        data = get_data(ticker, formatted_today)
         performance_data = get_performance(data)
     finally:
         sect_perf_data_list.append(performance_data)
@@ -154,6 +141,9 @@ for ticker in mag7_tickers:
     try:
         performance_data = pd.read_pickle(f'./data/{ticker}.pkl')
         print('File Found')
+        if performance_data['date'][performance_data.index[-1]] < formatted_today:
+            data = get_data(ticker, formatted_today)
+            performance_data = get_performance(data)
     except FileNotFoundError:
         print('File Not Found Error')
         data = get_data(ticker)
