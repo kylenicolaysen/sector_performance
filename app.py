@@ -7,10 +7,9 @@ import time
 from dotenv import load_dotenv
 import os
 
-# Load .env file
 load_dotenv()
-
-# Access the variables
+today = datetime.today()
+formatted_today = today.strftime('%Y-%m-%d')
 tiingo_api_key = os.getenv('TIINGO_API_KEY')
 auth = f'Token {tiingo_api_key}'
 headers = {
@@ -41,116 +40,67 @@ def get_performance(df):
     for i in range(129, len(df)):
         six_months.append((df['close'][df.index[i]] - df['close'][df.index[i-129]]) / df['close'][df.index[i-129]] * 100)
     # print(f'{df['ticker'][df.index[0]]}: {df['close'][-10:]} \n {five_days[-10:]}')
-    df['five days'] = five_days
-    df['one month'] = one_month
-    df['six months'] = six_months
+    df['five_days'] = five_days
+    df['one_month'] = one_month
+    df['six_months'] = six_months
     df.to_pickle(f'./data/{df['ticker'][df.index[0]]}.pkl')
     return df
 
-def plot_5d_perf(performance_df_list, perf_type, hist_length, interval=1):
+
+def plot_perf(performance_df_list, perf_type, hist_length, performance_length, interval=1):
     hist_length = hist_length * -1
+    if performance_length == 'five_days':
+        title_length = 'Five Days'
+    elif performance_length == 'one_month':
+        title_length = 'One Month'
+    elif performance_length == 'six_months':
+        title_length = 'Six Months'
+    else:
+        print('TITLE ERROR')
+        title_length = '__'
     date_list = list(performance_df_list[0]['date'])
     formatted_date_list = []
     for i in date_list:
         date_obj = datetime.strptime(i, "%Y-%m-%dT%H:%M:%S.%fZ")
         formatted_date_list.append(date_obj.strftime("%m-%d"))
     plt.figure(figsize=(16, 12))
-    plt.title(f'5 Day Performance of {perf_type} -- {hist_length * -1} Data Points -- {interval} Interval')
+    plt.title(f'{title_length} Performance of {perf_type} -- {hist_length * -1} Data Points -- {interval} Interval -- {formatted_today}')
     plt.xlabel('Date')
     plt.ylabel('Performance (%)')
-    plt.xticks(performance_df_list[0].index[hist_length::10], formatted_date_list[hist_length::10], rotation=45)
+    plt.xticks(performance_df_list[0].index[hist_length::1], formatted_date_list[hist_length::1], rotation=45)
     index_list = performance_df_list[0].index.to_list()
     plt.plot(index_list[hist_length:], ([0] * (hist_length*-1)), color='grey', linestyle='--')
     for performance_df in performance_df_list:
-        plt.plot(performance_df['five days'][performance_df.index[hist_length:]], label=performance_df['ticker'][performance_df.index[0]], marker='.')
+        plt.plot(performance_df[performance_length][performance_df.index[hist_length:]], label=performance_df['ticker'][performance_df.index[0]], marker='.')
     plt.legend()
-    plt.savefig(f'outputs/5day{perf_type}.png')
-    plt.show()
-    # plt.show(block=False)
-    # time.sleep(2)
-    # plt.close()
-
-def plot_1m_perf(performance_df_list, perf_type, hist_length, interval=1):
-    hist_length = hist_length * -1
-    date_list = list(performance_df_list[0]['date'])
-    formatted_date_list = []
-    for i in date_list:
-        date_obj = datetime.strptime(i, "%Y-%m-%dT%H:%M:%S.%fZ")
-        formatted_date_list.append(date_obj.strftime("%m-%d"))
-    plt.figure(figsize=(16, 12))
-    plt.title(f'1 Month Performance of {perf_type} -- {hist_length * -1} Data Points -- {interval} Interval')
-    plt.xlabel('Date')
-    plt.ylabel('Performance (%)')
-    plt.xticks(performance_df_list[0].index[hist_length::10], formatted_date_list[hist_length::10], rotation=45)
-    index_list = performance_df_list[0].index.to_list()
-    plt.plot(index_list[hist_length:], ([0] * (hist_length*-1)), color='grey', linestyle='--')
-    for performance_df in performance_df_list:
-        plt.plot(performance_df['one month'][performance_df.index[hist_length:]], label=performance_df['ticker'][performance_df.index[0]], marker='.')
-    plt.legend()
-    plt.savefig(f'outputs/1Month{perf_type}.png')
-    plt.show()
-
-def plot_6m_perf(performance_df_list, perf_type, hist_length, interval=1):
-    hist_length = hist_length * -1
-    date_list = list(performance_df_list[0]['date'])
-    formatted_date_list = []
-    for i in date_list:
-        date_obj = datetime.strptime(i, "%Y-%m-%dT%H:%M:%S.%fZ")
-        formatted_date_list.append(date_obj.strftime("%m-%d"))
-    plt.figure(figsize=(16, 12))
-    plt.title(f'6 Month Performance of {perf_type} -- {hist_length * -1} Data Points -- {interval} Interval')
-    plt.xlabel('Date')
-    plt.ylabel('Performance (%)')
-    plt.xticks(performance_df_list[0].index[hist_length::10], formatted_date_list[hist_length::10], rotation=45)
-    index_list = performance_df_list[0].index.to_list()
-    plt.plot(index_list[hist_length:], ([0] * (hist_length*-1)), color='grey', linestyle='--')
-    for performance_df in performance_df_list:
-        plt.plot(performance_df['six months'][performance_df.index[hist_length:]], label=performance_df['ticker'][performance_df.index[0]], marker='.')
-    plt.legend()
-    plt.savefig(f'outputs/6Months{perf_type}.png')
+    plt.savefig(f'outputs/{performance_length}{perf_type}.png')
     plt.show()
 
 
-today = datetime.today()
-formatted_today = today.strftime('%Y-%m-%d')
-
-sector_tickers = ['XLV', 'XLC', 'XLY', 'XLP', 'XLE', 'XLF', 'XLI', 'XLU', 'XLK', 'SMH', 'QQQ', 'SPY']
-sect_perf_data_list = []
-for ticker in sector_tickers:
-    try:
-        performance_data = pd.read_pickle(f'./data/{ticker}.pkl')
-        print('File Found')
-        if performance_data['date'][performance_data.index[-1]] < formatted_today:
-            print('File Outdated')
+def main(ticker_list):
+    perf_data_list = []
+    for ticker in ticker_list[1:]:
+        try:
+            performance_data = pd.read_pickle(f'./data/{ticker}.pkl')
+            print('File Found')
+            if performance_data['date'][performance_data.index[-1]] < formatted_today:
+                print('File Outdated')
+                data = get_data(ticker, formatted_today)
+                performance_data = get_performance(data)
+        except FileNotFoundError:
+            print('File Not Found')
             data = get_data(ticker, formatted_today)
             performance_data = get_performance(data)
-    except FileNotFoundError:
-        print('File Not Found')
-        data = get_data(ticker, formatted_today)
-        performance_data = get_performance(data)
-    finally:
-        sect_perf_data_list.append(performance_data)
+        finally:
+            perf_data_list.append(performance_data)
 
-plot_5d_perf(sect_perf_data_list, 'SPDR Sectors', 25)
-plot_1m_perf(sect_perf_data_list, 'SPDR Sectors', 25)
-plot_6m_perf(sect_perf_data_list, 'SPDR Sectors', 25)
+    #five_days one_month six_months
+    plot_perf(perf_data_list, ticker_list[0], 15, 'five_days')
+    plot_perf(perf_data_list, ticker_list[0], 15, 'one_month')
+    plot_perf(perf_data_list, ticker_list[0], 15, 'six_months')
 
-mag7_tickers = ['AMZN', 'AAPL', 'GOOG', 'META', 'MSFT','NVDA', 'TSLA', 'SPY']
-mag_perf_data_list = []
-for ticker in mag7_tickers:
-    try:
-        performance_data = pd.read_pickle(f'./data/{ticker}.pkl')
-        print('File Found')
-        if performance_data['date'][performance_data.index[-1]] < formatted_today:
-            data = get_data(ticker, formatted_today)
-            performance_data = get_performance(data)
-    except FileNotFoundError:
-        print('File Not Found Error')
-        data = get_data(ticker)
-        performance_data = get_performance(data)
-    finally:
-        mag_perf_data_list.append(performance_data)
 
-plot_5d_perf(mag_perf_data_list, 'Mag 7', 25)
-plot_1m_perf(mag_perf_data_list, 'Mag 7', 25)
-plot_6m_perf(mag_perf_data_list, 'Mag 7', 25)
+sector_tickers = ['SPDR Sectors', 'XLV', 'XLC', 'XLY', 'XLP', 'XLE', 'XLF', 'XLI', 'XLU', 'XLK', 'SMH', 'QQQ', 'SPY']
+mag7_tickers = ['Mag 7', 'AMZN', 'AAPL', 'GOOG', 'META', 'MSFT','NVDA', 'TSLA', 'SPY']
+main(sector_tickers)
+main(mag7_tickers)
