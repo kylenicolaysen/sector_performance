@@ -43,7 +43,7 @@ def get_performance(df):
     df['five_days'] = five_days
     df['one_month'] = one_month
     df['six_months'] = six_months
-    df.to_pickle(f'./data/{df['ticker'][df.index[0]]}.pkl')
+    df.to_pickle(f"./data/{df['ticker'][df.index[0]]}.pkl")
     return df
 
 
