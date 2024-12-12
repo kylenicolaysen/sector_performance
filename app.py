@@ -71,8 +71,12 @@ def plot_perf(performance_df_list, perf_type, hist_length, performance_length, i
     index_list = performance_df_list[0].index.to_list()
     plt.plot(index_list[hist_length:], ([0] * (hist_length*-1)), color='grey', linestyle='--')
     for performance_df in performance_df_list:
-        plt.plot(performance_df[performance_length][performance_df.index[hist_length:]], label=performance_df['ticker'][performance_df.index[0]], marker='.')
-    plt.legend()
+        line, = plt.plot(performance_df[performance_length][performance_df.index[hist_length:]], label=performance_df['ticker'][performance_df.index[0]], marker='.')
+        performance_df['line-color'] = line.get_color()
+    maxlim = plt.xlim()[1]
+    for performance_df in performance_df_list:
+        plt.text(maxlim-0.6, performance_df[performance_length][performance_df.index[-1]], performance_df['ticker'][performance_df.index[0]], size=14, color = performance_df['line-color'][performance_df.index[0]], va='center')
+    plt.legend(loc='upper left')
     plt.savefig(f'outputs/{performance_length}{perf_type}.png')
     plt.show()
 
