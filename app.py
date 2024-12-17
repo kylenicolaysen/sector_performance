@@ -104,7 +104,8 @@ def main(ticker_list):
     plot_perf(perf_data_list, ticker_list[0], 15, 'six_months')
 
 
-sector_tickers = ['SPDR Sectors', 'XLV', 'XLC', 'XLY', 'XLP', 'XLE', 'XLF', 'XLI', 'XLU', 'XLK', 'SMH', 'QQQ', 'SPY']
-mag7_tickers = ['Mag 7', 'AMZN', 'AAPL', 'GOOG', 'META', 'MSFT','NVDA', 'TSLA', 'SPY']
-main(sector_tickers)
-main(mag7_tickers)
+if __name__ == '__main__':
+    sector_tickers = ['SPDR Sectors', 'XLV', 'XLC', 'XLY', 'XLP', 'XLE', 'XLF', 'XLI', 'XLU', 'XLK', 'SMH', 'QQQ', 'SPY']
+    mag7_tickers = ['Mag 7', 'AMZN', 'AAPL', 'GOOG', 'META', 'MSFT','NVDA', 'TSLA', 'SPY']
+    main(sector_tickers)
+    main(mag7_tickers)
