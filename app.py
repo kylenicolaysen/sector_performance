@@ -43,7 +43,7 @@ def get_performance(df):
     df['five_days'] = five_days
     df['one_month'] = one_month
     df['six_months'] = six_months
-    df.to_pickle(f"./data/{df['ticker'][df.index[0]]}.pkl")
+    df.to_pickle(f"./data/{df['ticker'][df.index[0]]}{formatted_today}.pkl")
     return df
 
 
@@ -85,12 +85,12 @@ def main(ticker_list):
     perf_data_list = []
     for ticker in ticker_list[1:]:
         try:
-            performance_data = pd.read_pickle(f'./data/{ticker}.pkl')
+            performance_data = pd.read_pickle(f'./data/{ticker}{formatted_today}.pkl')
             print('File Found')
-            if performance_data['date'][performance_data.index[-1]] < formatted_today:
-                print('File Outdated')
-                data = get_data(ticker, formatted_today)
-                performance_data = get_performance(data)
+            # if performance_data['date'][performance_data.index[-1]] < formatted_today:
+            #     print('File Outdated')
+            #     data = get_data(ticker, formatted_today)
+            #     performance_data = get_performance(data)
         except FileNotFoundError:
             print('File Not Found')
             data = get_data(ticker, formatted_today)
@@ -109,3 +109,4 @@ if __name__ == '__main__':
     mag7_tickers = ['Mag 7', 'AMZN', 'AAPL', 'GOOG', 'META', 'MSFT','NVDA', 'TSLA', 'SPY']
     main(sector_tickers)
     main(mag7_tickers)
+    # main(['TITLE', 'PLTR'])
